@@ -3,10 +3,11 @@ import PropTypes from "prop-types";
 import { ReactComponent as MutedIcon } from "../../assets/muted.svg";
 import { ReactComponent as LowVolumeIcon } from "../../assets/low_volume.svg";
 import { ReactComponent as VolumeIcon } from "../../assets/volume.svg";
-import { ReactComponent as PlayIcon } from "../../assets/play.svg";
-import { ReactComponent as PauseIcon } from "../../assets/pause.svg";
+import { CaretDown, CaretUp, Play, SkipBack, SkipForward, Spinner, X } from "@phosphor-icons/react";
 import { secondsToMinutes } from "../../Utils/helpers";
 import { AudioContext } from "../../Contexts/AudioContext";
+import { Pause } from "@phosphor-icons/react/dist/ssr";
+
 
 function AudioPlayer() {
   const { audioStream, currentSong, playbackStarted, setPlaybackStarted } =
@@ -14,6 +15,7 @@ function AudioPlayer() {
   const [currentTime, setCurrentTime] = useState(currentSong.currentTime);
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(100);
+
 
   useEffect(() => {
     currentSong.ontimeupdate = () => setCurrentTime(currentSong.currentTime);
@@ -50,59 +52,72 @@ function AudioPlayer() {
     currentSong.play();
   }
 
+  // navigators 
+
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: audioStream.title,
+    artist: audioStream.uploader,
+    // album: 'unknown',
+    artwork: [
+      {
+        src: audioStream.thumbnailUrl,
+        sizes: "128x128 256x256",
+        type: "image/x-icon",
+      },
+    ],
+  });
+
+  navigator.mediaSession.setActionHandler("previoustrack", function () {
+    // handlePrevSong();
+  });
+
+  navigator.mediaSession.setActionHandler("nexttrack", function () {
+    // handleNextSong();
+  });
+
   return (
     <div
       id="audioPlayer"
-      className="flex flex-col md:flex-row justify-between items-center gap-4 w-full pd-container animated slideInUp"
+      className="fixed bottom-0 w-full h-[75px] bg-black border-t border-gray-600 flex items-center justify-between px-5"
     >
-      <p className="w-full text-center md:w-1/4 md:text-left">
-        {audioStream.title}
-      </p>
-      <div className="w-full md:w-2/3 flex-grow flex flex-col items-center gap-4">
-        <AudioTrack
-          currentSong={currentSong}
-          currentTime={currentTime}
-          totalTime={audioStream.duration}
-        />
+      {/** Song Info */}
+      <div className="flex items-center gap-3 max-w-[395px] w-full">
+          <div className="max-w-[80px] max-h-[50px] w-full h-full">
+              <img
+                src={audioStream.thumbnailUrl}
+                alt="Song Cover"
+                className="rounded-lg w-full h-full"
+              />
+          </div>
+          <div>
+                <h1 className="text-[14px] font-medium line-clamp-1">{audioStream.title}</h1>
+                <p className="text-[13px] text-secondaryText">
+                  {audioStream.uploader}
+                </p>
+          </div>
+        </div>
+
+      <div className="flex flex-col gap-3 items-center justify-center">
         <div className="flex gap-4 w-full justify-between items-center ">
           <div className="flex flex-grow justify-center gap-4 ml-6 md:ml-0">
             <button
               disabled
-              className="cursor-not-allowed"
+              className="w-[32px] h-[32px] flex items-center justify-center hover:bg-gray-700 cursor-pointer rounded-full"
               title="Not available yet."
             >
-              Prev
+              <SkipBack size={22} />
             </button>
             {!playbackStarted && (
-              <div className="group w-12 h-12 bg-bg-light rounded-full p-4">
-                <svg
-                  className="animate-spin h-5 w-5 -mt-[2px] -ml-[2px]"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="fill-bg-dark"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-              </div>
+              <button className="w-[32px] h-[32px] animate-spin flex items-center justify-center bg-white rounded-full text-black">
+                <Spinner size={22} />
+              </button>
             )}
             {playbackStarted && playing && (
               <button
-                className="group w-12 h-12 bg-bg-light rounded-full p-4"
+                className="w-[32px] h-[32px] flex items-center justify-center bg-white rounded-full text-black"
                 onClick={pauseAudio}
               >
-                <PauseIcon />
+                <Pause size={22} />
               </button>
             )}
             {playbackStarted && !playing && (
@@ -110,15 +125,15 @@ function AudioPlayer() {
                 className="group w-12 h-12 bg-bg-light rounded-full p-3"
                 onClick={playAudio}
               >
-                <PlayIcon />
+                <Play size={22} />
               </button>
             )}{" "}
             <button
               disabled
-              className="cursor-not-allowed"
+              className="w-[32px] h-[32px] flex items-center justify-center hover:bg-gray-500 cursor-pointer rounded-full"
               title="Not available yet."
             >
-              Next
+              <SkipForward size={22} />
             </button>
           </div>
           {
@@ -128,6 +143,11 @@ function AudioPlayer() {
             <Volume volume={volume} handleVolumeChange={changeVolume} />
           </div>
         </div>
+        <AudioTrack
+          currentSong={currentSong}
+          currentTime={currentTime}
+          totalTime={audioStream.duration}
+        />
       </div>
       <div className="w-full flex justify-center md:w-1/4 md:justify-end">
         {
@@ -203,8 +223,8 @@ function AudioTrack({ currentSong, currentTime, totalTime: audioDuration }) {
   }
 
   return (
-    <div className="w-full flex flex-row gap-4 md:gap-8">
-      <p className="text-sm md:text-base">
+    <div className="w-[441px] flex flex-row gap-4 md:gap-8">
+      <p className="text-[12px] text-secondaryText">
         {currentTimeDisplay.minutes}:{currentTimeDisplay.seconds}
       </p>
       <div
@@ -233,7 +253,7 @@ function AudioTrack({ currentSong, currentTime, totalTime: audioDuration }) {
           ></div>
         </div>
       </div>
-      <p className="text-sm md:text-base">
+      <p className="text-[12px] text-secondaryText">
         {totalDuration.minutes}:{totalDuration.seconds}
       </p>
     </div>

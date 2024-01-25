@@ -23,7 +23,7 @@ function App() {
   }, [audioStream]);
 
   return (
-    <main className="flex flex-col items-center justify-top gap-4 bg-bg-darker rounded w-full h-full md:w-4/5">
+    <main className="flex flex-col items-center justify-top gap-4 bg-bg-darker rounded w-full h-full">
       <AudioContext.Provider
         value={{
           audioStream,
